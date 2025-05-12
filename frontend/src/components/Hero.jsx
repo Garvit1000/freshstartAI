@@ -61,8 +61,8 @@ const Hero = () => {
               with AI
             </h1>
             <p className="text-lg md:text-xl text-gray-600 mb-8 font-inter max-w-lg mx-auto md:mx-0">
-              Optimize your resume, cover letter, and LinkedIn—built
-              specifically for freshers entering the job market!
+              Optimize your resume, and LinkedIn—built specifically for freshers
+              entering the job market!
             </p>
             <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 justify-center md:justify-start">
               <Link to="/onboarding">
