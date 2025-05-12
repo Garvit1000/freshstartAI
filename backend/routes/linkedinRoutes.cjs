@@ -28,15 +28,23 @@ router.post("/optimize-headline", async (req, res) => {
     if (!currentHeadline) {
       return res.status(400).json({ error: "Current headline is required" });
     }
+    
     const optimizedHeadline = await optimizeLinkedInHeadline(currentHeadline);
+    
+    if (!optimizedHeadline) {
+      throw new Error("No response received from optimization service");
+    }
+    
     res.json({
       optimizedHeadline,
+      success: true,
     });
   } catch (error) {
     console.error("Error in optimize-headline route:", error);
     res.status(500).json({
       error: "Failed to optimize headline",
-      details: error.message,
+      details: error.message || "Unknown error occurred",
+      success: false,
     });
   }
 });
@@ -49,17 +57,28 @@ router.post("/optimize-about", async (req, res) => {
     if (!currentAbout) {
       return res
         .status(400)
-        .json({ error: "Current about section is required" });
+        .json({ 
+          error: "Current about section is required",
+          success: false 
+        });
     }
+    
     const optimizedAbout = await optimizeLinkedInAbout(currentAbout);
+    
+    if (!optimizedAbout) {
+      throw new Error("No response received from optimization service");
+    }
+    
     res.json({
       optimizedAbout,
+      success: true,
     });
   } catch (error) {
     console.error("Error in optimize-about route:", error);
     res.status(500).json({
       error: "Failed to optimize about section",
-      details: error.message,
+      details: error.message || "Unknown error occurred",
+      success: false,
     });
   }
 });

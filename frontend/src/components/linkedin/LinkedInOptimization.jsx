@@ -127,10 +127,16 @@ const LinkedInOptimization = () => {
         },
       );
 
-      const data = await response.json();
+      let data;
+      try {
+        data = await response.json();
+      } catch (parseError) {
+        console.error("Failed to parse response:", parseError);
+        throw new Error("Server returned an invalid response");
+      }
 
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to optimize headline");
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || data.details || "Failed to optimize headline");
       }
 
       if (!(await handleCreditDeduction())) {
@@ -176,10 +182,16 @@ const LinkedInOptimization = () => {
         },
       );
 
-      const data = await response.json();
+      let data;
+      try {
+        data = await response.json();
+      } catch (parseError) {
+        console.error("Failed to parse response:", parseError);
+        throw new Error("Server returned an invalid response");
+      }
 
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to optimize about section");
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || data.details || "Failed to optimize about section");
       }
 
       if (!(await handleCreditDeduction())) {
