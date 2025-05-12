@@ -117,7 +117,7 @@ const LinkedInOptimization = () => {
     setLoading(true);
     try {
       const response = await fetch(
-        "http://localhost:3000/api/linkedin/optimize-headline",
+        "https://freshstartai.onrender.com/api/linkedin/optimize-headline",
         {
           method: "POST",
           headers: {
@@ -166,7 +166,7 @@ const LinkedInOptimization = () => {
     setLoading(true);
     try {
       const response = await fetch(
-        "http://localhost:3000/api/linkedin/optimize-about",
+        "https://freshstartai.onrender.com/api/linkedin/optimize-about",
         {
           method: "POST",
           headers: {

@@ -162,7 +162,7 @@ const DashboardMain = () => {
     const fetchTemplates = async () => {
       try {
         const response = await fetch(
-          "http://localhost:3000/api/resume-templates",
+          "https://freshstartai.onrender.com/api/resume-templates",
         );
         if (response.ok) {
           const data = await response.json();
@@ -299,7 +299,7 @@ const DashboardMain = () => {
         // Use the direct PDF generation endpoint
 
         const response = await fetch(
-          "http://localhost:3000/api/generate-direct-pdf",
+          "https://freshstartai.onrender.com/api/generate-direct-pdf",
           {
             method: "POST",
             body: formData,
@@ -485,7 +485,7 @@ const DashboardMain = () => {
       formData.append("transparencyMode", transparencyMode);
 
       const response = await fetch(
-        "http://localhost:3000/api/optimize-resume",
+        "https://freshstartai.onrender.com/api/optimize-resume",
         {
           method: "POST",
           body: formData,
@@ -532,7 +532,7 @@ const DashboardMain = () => {
   const downloadPDF = async () => {
     try {
       // Simple approach - just redirect to the download endpoint
-      window.location.href = "http://localhost:3000/api/download-pdf";
+      window.location.href = "https://freshstartai.onrender.com/api/download-pdf";
     } catch (error) {
       console.error("Error downloading PDF:", error);
       setError("Failed to download PDF: " + error.message);
@@ -634,30 +634,6 @@ const DashboardMain = () => {
 
       {/* Main Tabs */}
       <Tabs defaultValue="resume" className="w-full">
-        {/* <TabsList className="grid grid-cols-3 mb-8 bg-gray-100">
-          <TabsTrigger
-            value="resume"
-            className="data-[state=active]:bg-[#2AB7CA] data-[state=active]:text-white"
-          >
-            Resume
-          </TabsTrigger> */}
-        {/* Commented out Cover Letter Tab
-          <TabsTrigger
-            value="cover-letter"
-            className="data-[state=active]:bg-[#2AB7CA] data-[state=active]:text-white"
-          >
-            Cover Letter
-          </TabsTrigger>
-          */}
-        {/* Commented out LinkedIn Tab
-          <TabsTrigger
-            value="linkedin"
-            className="data-[state=active]:bg-[#2AB7CA] data-[state=active]:text-white"
-          >
-            LinkedIn
-          </TabsTrigger>
-          */}
-        {/* </TabsList> */}
 
         {/* Resume Tab */}
         <TabsContent value="resume" className="space-y-6">
