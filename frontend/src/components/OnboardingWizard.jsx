@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
+import { useDebouncedCallback } from "@/lib/hooks";
 import {
   Card,
   CardContent,
@@ -50,8 +51,8 @@ const OnboardingWizard = () => {
     }
   }, [submitAttempts]);
 
-  const checkUsernameAvailability = useCallback(
-    debounce(async (username) => {
+  const checkUsernameAvailability = useDebouncedCallback(
+    async (username) => {
       if (!username || username.length < 3) return;
       
       setCheckingUsername(true);
@@ -69,13 +70,20 @@ const OnboardingWizard = () => {
             ...prev,
             username: "This username is already taken"
           }));
+        } else {
+          // Clear the error if username becomes available
+          setErrors(prev => ({
+            ...prev,
+            username: null
+          }));
         }
       } catch (error) {
         console.error("Username check error:", error);
       } finally {
         setCheckingUsername(false);
       }
-    }, 500),
+    },
+    500,
     []
   );
 
