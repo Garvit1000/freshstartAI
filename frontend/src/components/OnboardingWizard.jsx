@@ -113,16 +113,29 @@ const OnboardingWizard = () => {
     return null;
   };
 
-  // Username validation
+  // Username validation with security checks
   const validateUsername = (username) => {
+    if (!username || typeof username !== 'string') {
+      return "Invalid username format";
+    }
     if (username.length < 3) {
       return "Username must be at least 3 characters";
     }
     if (username.length > 20) {
       return "Username must be less than 20 characters";
     }
+    // Check for valid characters - only alphanumeric and underscores
     if (!/^[a-zA-Z0-9_]+$/.test(username)) {
       return "Username can only contain letters, numbers, and underscores";
+    }
+    // Must start with a letter
+    if (!/^[a-zA-Z]/.test(username)) {
+      return "Username must start with a letter";
+    }
+    // Check for common patterns that might indicate impersonation
+    const restrictedTerms = ['admin', 'administrator', 'mod', 'moderator', 'system'];
+    if (restrictedTerms.some(term => username.toLowerCase().includes(term))) {
+      return "Username contains restricted terms";
     }
     return null;
   };
@@ -177,17 +190,29 @@ const OnboardingWizard = () => {
       setErrors({});
       setLoading(true);
 
-      // Check if email already exists
+      // Check if email or username already exists
       const { data: existingUsers, error: checkError } = await supabase
         .from("profiles")
-        .select("email")
-        .eq("email", formData.email.toLowerCase())
-        .limit(1);
+        .select("email, username")
+        .or(`email.eq.${formData.email.toLowerCase()},username.eq.${formData.username.trim()}`)
+        .limit(2);
 
       if (checkError) throw checkError;
 
       if (existingUsers && existingUsers.length > 0) {
-        setErrors({ email: "This email is already registered" });
+        const emailExists = existingUsers.some(user => user.email === formData.email.toLowerCase());
+        const usernameExists = existingUsers.some(user => user.username === formData.username.trim());
+        
+        if (emailExists && usernameExists) {
+          setErrors({ 
+            email: "This email is already registered",
+            username: "This username is already taken"
+          });
+        } else if (emailExists) {
+          setErrors({ email: "This email is already registered" });
+        } else {
+          setErrors({ username: "This username is already taken" });
+        }
         return;
       }
 
