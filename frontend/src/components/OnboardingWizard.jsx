@@ -32,6 +32,7 @@ const OnboardingWizard = () => {
   const [loading, setLoading] = useState(false);
   const [submitAttempts, setSubmitAttempts] = useState(0);
   const [submitBlocked, setSubmitBlocked] = useState(false);
+  const [checkingUsername, setCheckingUsername] = useState(false);
   const totalSteps = 3;
   const navigate = useNavigate();
   const { signUp } = useAuth();
@@ -49,6 +50,35 @@ const OnboardingWizard = () => {
     }
   }, [submitAttempts]);
 
+  const checkUsernameAvailability = useCallback(
+    debounce(async (username) => {
+      if (!username || username.length < 3) return;
+      
+      setCheckingUsername(true);
+      try {
+        const { data: usernameCheck, error } = await supabase
+          .from("profiles")
+          .select("username")
+          .ilike("username", username.trim())
+          .limit(1);
+
+        if (error) throw error;
+
+        if (usernameCheck && usernameCheck.length > 0) {
+          setErrors(prev => ({
+            ...prev,
+            username: "This username is already taken"
+          }));
+        }
+      } catch (error) {
+        console.error("Username check error:", error);
+      } finally {
+        setCheckingUsername(false);
+      }
+    }, 500),
+    []
+  );
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -62,6 +92,11 @@ const OnboardingWizard = () => {
         ...prev,
         [name]: null,
       }));
+    }
+
+    // Check username availability while typing
+    if (name === 'username' && value.length >= 3) {
+      checkUsernameAvailability(value);
     }
   };
 
@@ -149,6 +184,9 @@ const OnboardingWizard = () => {
     if (usernameError) {
       newErrors.username = usernameError;
     }
+    if (checkingUsername) {
+      newErrors.username = "Please wait while we check username availability...";
+    }
 
     // Email validation
     if (!formData.email) {
@@ -194,14 +232,25 @@ const OnboardingWizard = () => {
       const { data: existingUsers, error: checkError } = await supabase
         .from("profiles")
         .select("email, username")
-        .or(`email.eq.${formData.email.toLowerCase()},username.eq.${formData.username.trim()}`)
+        .or('email.eq.' + formData.email.toLowerCase() + ',username.eq.' + formData.username.trim())
         .limit(2);
+
+      // Double check username uniqueness separately to ensure case-insensitive matching
+      const { data: usernameCheck, error: usernameCheckError } = await supabase
+        .from("profiles")
+        .select("username")
+        .ilike("username", formData.username.trim())
+        .limit(1);
+
+      if (usernameCheckError) throw usernameCheckError;
 
       if (checkError) throw checkError;
 
-      if (existingUsers && existingUsers.length > 0) {
-        const emailExists = existingUsers.some(user => user.email === formData.email.toLowerCase());
-        const usernameExists = existingUsers.some(user => user.username === formData.username.trim());
+      if (existingUsers && existingUsers.length > 0 || (usernameCheck && usernameCheck.length > 0)) {
+        const emailExists = existingUsers && existingUsers.some(user => user.email === formData.email.toLowerCase());
+        const usernameExists = (existingUsers && existingUsers.some(user => 
+          user.username.toLowerCase() === formData.username.trim().toLowerCase())) || 
+          (usernameCheck && usernameCheck.length > 0);
         
         if (emailExists && usernameExists) {
           setErrors({ 
