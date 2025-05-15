@@ -781,35 +781,53 @@ function drawEnhancedHeader(
 
       // Extract contact items by type
       const extractContact = (type, text) => {
-        switch(type) {
-          case 'email':
+        switch (type) {
+          case "email":
             // More comprehensive email regex
-            const emailMatches = text.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g);
+            const emailMatches = text.match(
+              /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g,
+            );
             return emailMatches ? emailMatches[0] : null;
-          case 'phone':
+          case "phone":
             // Handle more phone formats
-            const phoneMatches = text.match(/(?:\+?\d{1,2}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/g);
+            const phoneMatches = text.match(
+              /(?:\+?\d{1,2}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/g,
+            );
             return phoneMatches ? phoneMatches[0] : null;
-          case 'linkedin':
+          case "linkedin":
             // Handle various LinkedIn URL formats
-            const linkedinMatches = text.match(/(?:linkedin\.com\/(?:in|profile)\/[a-zA-Z0-9-]+|(?:^|\s)in\/[a-zA-Z0-9-]+)/g);
+            const linkedinMatches = text.match(
+              /(?:linkedin\.com\/(?:in|profile)\/[a-zA-Z0-9-]+|(?:^|\s)in\/[a-zA-Z0-9-]+)/g,
+            );
             return linkedinMatches ? linkedinMatches[0] : null;
+          case "github":
+            // Handle GitHub profile URLs and usernames
+            const githubMatches = text.match(
+              /(?:github\.com\/[a-zA-Z0-9-]+|(?:^|\s)github:?\s*[a-zA-Z0-9-]+)/g,
+            );
+            return githubMatches ? githubMatches[0] : null;
         }
         return null;
       };
 
       // Process each contact line individually to preserve structure
-      contactLines.forEach(line => {
-        const email = extractContact('email', line);
-        const phone = extractContact('phone', line);
-        const linkedin = extractContact('linkedin', line);
-        
+      contactLines.forEach((line) => {
+        const email = extractContact("email", line);
+        const phone = extractContact("phone", line);
+        const linkedin = extractContact("linkedin", line);
+        const github = extractContact("github", line);
+
         if (email) contactItems.push(email);
         if (phone) contactItems.push(phone);
         if (linkedin) contactItems.push(linkedin);
-        
+        if (github) {
+          // Format GitHub link properly
+          const githubUser = github.split(/github(?:\.com)?[:\s\/]+/).pop();
+          contactItems.push(`github.com/${githubUser}`);
+        }
+
         // If line doesn't match any pattern but contains text, add it as is
-        if (!email && !phone && !linkedin && line.trim()) {
+        if (!email && !phone && !linkedin && !github && line.trim()) {
           contactItems.push(line.trim());
         }
       });
