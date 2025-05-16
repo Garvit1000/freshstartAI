@@ -471,19 +471,25 @@ const DashboardMain = () => {
   // Optimize resume button click handler
   const handleOptimizeResume = async () => {
     try {
-      const hasCredits = await handleCreditDeduction();
-      if (!hasCredits) return;
-
+      // Don't deduct credits until optimization is successful
       setIsOptimizing(true);
       setError(null);
       setPdfReady(false);
-
+  
+      // Verify credit availability but don't deduct yet
+      if (credits <= 0) {
+        setShowCreditWarning(true);
+        setError("You don't have enough credits to optimize your resume. Please contact support.");
+        setIsOptimizing(false);
+        return;
+      }
+  
       const formData = new FormData();
       formData.append("resume", selectedFile);
       formData.append("jobDescription", jobDescription);
       formData.append("template", selectedTemplate);
       formData.append("transparencyMode", transparencyMode);
-
+  
       const response = await fetch(
         "https://freshstartai.onrender.com/api/optimize-resume",
         {
@@ -491,12 +497,12 @@ const DashboardMain = () => {
           body: formData,
         },
       );
-
+  
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || "Failed to optimize resume");
       }
-
+  
       const data = await response.json();
       setOriginalText(data.originalText);
       setOptimizedText(data.optimizedText.optimizedText || data.optimizedText);
@@ -510,19 +516,25 @@ const DashboardMain = () => {
         setTransparencyInsights(data.transparencyInsights);
       }
       setSuccessMessage("Resume optimized successfully!");
+      
+      // Only deduct credit after successful optimization
+      const newCredits = credits - 1;
+      const { error: creditError } = await supabase
+        .from("profiles")
+        .update({ credits: newCredits })
+        .eq("id", user.id);
+      
+      if (creditError) {
+        console.error("Error updating credits:", creditError);
+        setError("Credit was not deducted. Please contact support.");
+      } else {
+        setCredits(newCredits);
+      }
+      
     } catch (err) {
       setError(err.message);
       console.error("Error optimizing resume:", err);
-      // Restore credit if optimization failed
-      const { error: creditError } = await supabase
-        .from("profiles")
-        .update({ credits: credits + 1 })
-        .eq("id", user.id);
-      if (creditError) {
-        console.error("Error restoring credit:", creditError);
-      } else {
-        setCredits(credits + 1);
-      }
+      // No need to restore credit since we only deduct after success
     } finally {
       setIsOptimizing(false);
     }
