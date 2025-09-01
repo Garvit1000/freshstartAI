@@ -84,7 +84,7 @@ Planning and Verification:
 Output Format:
 - Return results as a Markdown-formatted document.
 - Use Markdown headings (#, ##, ###, etc.) to mirror the original section hierarchy.
-- Apply Markdown code blocks (```) or &nbsp; (HTML non-breaking space) to preserve precise spacing/indentation where needed.
+'- Apply Markdown code blocks (```) or &nbsp; (HTML non-breaking space) to preserve precise spacing/indentation where needed.'
 - Utilize **bold** for bold text and ALL CAPS where appropriate.
 - For bullet points and nested lists, use - markers and correct nests as per original.
 - Present contact information prominently at the top, bolded and spaced as per original layout.
