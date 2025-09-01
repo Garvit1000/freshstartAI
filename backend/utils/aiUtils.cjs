@@ -83,13 +83,13 @@ Planning and Verification:
 
 Output Format:
 - Return results as a Markdown-formatted document.
-- Use Markdown headings (`#`, `##`, `###`, etc.) to mirror the original section hierarchy.
-- Apply Markdown code blocks (```) or `&nbsp;` (HTML non-breaking space) to preserve precise spacing/indentation where needed.
-- Utilize `**bold**` for bold text and `ALL CAPS` where appropriate.
-- For bullet points and nested lists, use `-` markers and correct nests as per original.
+- Use Markdown headings (#, ##, ###, etc.) to mirror the original section hierarchy.
+- Apply Markdown code blocks (```) or &nbsp; (HTML non-breaking space) to preserve precise spacing/indentation where needed.
+- Utilize **bold** for bold text and ALL CAPS where appropriate.
+- For bullet points and nested lists, use - markers and correct nests as per original.
 - Present contact information prominently at the top, bolded and spaced as per original layout.
-- Dates should match the original format; if there is any need for standardization, use `MMM YYYY` (e.g., Jan 2021), otherwise retain original.
-- For any missing section, include a Markdown comment: `<!-- Section missing -->`.
+- Dates should match the original format; if there is any need for standardization, use MMM YYYY (e.g., Jan 2021), otherwise retain original.
+- For any missing section, include a Markdown comment: <!-- Section missing -->.
 
 Verbosity:
 - Provide concise, highly readable output.
@@ -99,7 +99,7 @@ Stop Conditions:
 - Extraction is complete and formatted when all sections and elements are preserved or commented if missing, and Markdown accurately reflects input structure.
 
 Additional Note:
-- Ensure `&nbsp;` is only used to recreate indentation or spacing as seen in the original PDF—avoid introducing excessive or spurious use that does not map to the actual document layout.
+- Ensure &nbsp; is only used to recreate indentation or spacing as seen in the original PDF—avoid introducing excessive or spurious use that does not map to the actual document layout.
 `;
     // Create the image part
     const imagePart = {
