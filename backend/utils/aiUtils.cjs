@@ -43,9 +43,9 @@ async function extractTextFromPDF(
 
     // Create the prompt with the PDF content
 const prompt = `
-Developer: Role and Objective:
+Developer: # Role and Objective
 Extract and structure the full text content from a PDF resume, carefully preserving the document's original layout, section hierarchy, and formatting in a Markdown output.
-Instructions:
+# Instructions
 - Begin with a concise checklist (3-7 bullets) of what you will do; keep items conceptual, not implementation-level.
 - Extract all textual elements, maintaining:
   1. Section headers and their hierarchical order
@@ -56,7 +56,7 @@ Instructions:
   6. Education entries with corresponding dates
   7. Skills and certifications
   8. Professional summary or profile section
-Sub-categories:
+## Sub-categories
 - Preserve:
   - Indentation of every line
   - Styles and depth of bullet points
@@ -64,33 +64,51 @@ Sub-categories:
   - Spacing precision between sections
   - Layout of contact information
   - Original date formatting in relevant sections
-Context:
+# Context
 - Resume PDF is the source; your output must mimic the input's structure and formatting as closely as possible using Markdown.
 - Some sections may be missing; these should be explicitly noted.
-Reasoning Steps:
+# Reasoning Steps
 - Analyze the input PDF step by step, identifying and preserving hierarchical and stylistic cues throughout extraction.
-Planning and Verification:
+# Planning and Verification
 - Decompose PDF into sections and components (headers, lists, etc.).
 - Pay close attention to layout, indentation, spacing, and any unique formatting.
 - Double-check that extracted text hierarchy, styles, indentation, and spacing match the original before generating Markdown output.
 - Confirm all required sections are present or appropriately commented if missing.
 - After the Markdown output is generated, validate that all required elements and structure are correctly preserved; if discrepancies are found, self-correct and repeat validation.
-Output Format:
+# Output Format
 - Return results as a Markdown-formatted document.
-- Use Markdown headings (#, ##, ###, etc.) to mirror the original section hierarchy.
-- Apply Markdown code blocks (\`\`\`) or &nbsp; (HTML non-breaking space) to preserve precise spacing/indentation where needed.
-- Utilize **bold** for bold text and ALL CAPS where appropriate.
-- For bullet points and nested lists, use - markers and correct nests as per original.
+- Use Markdown headings (\`#\`, \`##\`, \`###\`, etc.) to mirror the original section hierarchy.
+- Apply Markdown code blocks (\`\`\`) or \`&nbsp;\` (HTML non-breaking space) to preserve precise spacing/indentation where needed.
+- Utilize \`**bold**\` for bold text and \`ALL CAPS\` where appropriate.
+- For bullet points and nested lists, use \`-\` markers and correct nests as per original.
 - Present contact information prominently at the top, bolded and spaced as per original layout.
-- Dates should match the original format; if there is any need for standardization, use MMM YYYY (e.g., Jan 2021), otherwise retain original.
-- For any missing section, include a Markdown comment: <!-- Section missing -->.
-Verbosity:
+- Dates should match the original format; if there is any need for standardization, use \`MMM YYYY\` (e.g., Jan 2021), otherwise retain original.
+- For any missing section, include a Markdown comment: \`<!-- Section missing -->\`.
+# Verbosity
 - Provide concise, highly readable output.
 - Use high verbosity with clear, explicit Markdown constructs for sections and lists.
-Stop Conditions:
+# Stop Conditions
 - Extraction is complete and formatted when all sections and elements are preserved or commented if missing, and Markdown accurately reflects input structure.
-Additional Note:
-- Ensure &nbsp; is only used to recreate indentation or spacing as seen in the original PDF—avoid introducing excessive or spurious use that does not map to the actual document layout.
+---
+Example Output:
+\`\`\`markdown
+**JOHN DOE**  
+johndoe@email.com  
+(555) 555-5555
+## PROFESSIONAL SUMMARY
+Results-driven software engineer with ...
+## SKILLS & CERTIFICATIONS
+- Python
+- AWS Certified Solutions Architect
+## WORK EXPERIENCE
+### Software Engineer
+Acme Corp  
+Jan 2020 – Present
+- Developed ...
+## EDUCATION
+Bachelor of Science in Computer Science, XYZ University  
+2016 – 2020
+\`\`\`
 `;
     // Create the image part
     const imagePart = {
