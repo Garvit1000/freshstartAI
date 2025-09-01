@@ -42,10 +42,9 @@ async function extractTextFromPDF(
     const visionModel = model.geminiPro || model;
 
     // Create the prompt with the PDF content
-    const prompt = `
+const prompt = `
 Developer: # Role and Objective
-Extract and structure the full text content from a PDF resume, carefully preserving the document's original layout, section hierarchy, and formatting in a Markdown output. Enhance the extracted resume to improve its Applicant Tracking System (ATS) score by up to 80%, focusing on optimizing section clarity, keyword relevance, and formatting for ATS compatibility.
-
+Extract and structure the full text content from a PDF resume, carefully preserving the document's original layout, section hierarchy, and formatting in a Markdown output.
 # Instructions
 - Begin with a concise checklist (3-7 bullets) of what you will do; keep items conceptual, not implementation-level.
 - Extract all textual elements, maintaining:
@@ -57,9 +56,6 @@ Extract and structure the full text content from a PDF resume, carefully preserv
   6. Education entries with corresponding dates
   7. Skills and certifications
   8. Professional summary or profile section
-- Enhance keyword optimization and clarity in each section for improved ATS compatibility.
-- Ensure formatting, spacing, and section labeling aligns with best practices for ATS parsing.
-
 ## Sub-categories
 - Preserve:
   - Indentation of every line
@@ -68,75 +64,52 @@ Extract and structure the full text content from a PDF resume, carefully preserv
   - Spacing precision between sections
   - Layout of contact information
   - Original date formatting in relevant sections
-- Optimize language and structure within each section for maximum ATS parsing effectiveness (e.g., explicit skill lists, clearly labeled sections).
-
 # Context
-- Resume PDF is the source; your output must mimic the input’s structure and formatting as closely as possible using Markdown.
+- Resume PDF is the source; your output must mimic the input's structure and formatting as closely as possible using Markdown.
 - Some sections may be missing; these should be explicitly noted.
-- Resume content should be enhanced to improve ATS score, focusing on clarity, keywords, and formatting.
-
 # Reasoning Steps
 - Analyze the input PDF step by step, identifying and preserving hierarchical and stylistic cues throughout extraction.
-- Identify opportunities to insert relevant keywords and enhance section labeling for ATS.
-
 # Planning and Verification
 - Decompose PDF into sections and components (headers, lists, etc.).
 - Pay close attention to layout, indentation, spacing, and any unique formatting.
-- Optimize for ATS by making section headers explicit, standardizing section names, and adding common keywords relevant to the candidate's field.
 - Double-check that extracted text hierarchy, styles, indentation, and spacing match the original before generating Markdown output.
 - Confirm all required sections are present or appropriately commented if missing.
-- After the Markdown output is generated, validate that all required elements and structure are correctly preserved and enhanced for ATS; if discrepancies are found, self-correct and repeat validation.
-
+- After the Markdown output is generated, validate that all required elements and structure are correctly preserved; if discrepancies are found, self-correct and repeat validation.
 # Output Format
 - Return results as a Markdown-formatted document.
-- Use Markdown headings (`#`, `##`, `###`, etc.) to mirror the original section hierarchy.
-- Apply Markdown code blocks (```) or `&nbsp;` (HTML non-breaking space) to preserve precise spacing/indentation where needed.
-- Utilize `**bold**` for bold text and `ALL CAPS` where appropriate.
-- For bullet points and nested lists, use `-` markers and correct nests as per original.
+- Use Markdown headings (\`#\`, \`##\`, \`###\`, etc.) to mirror the original section hierarchy.
+- Apply Markdown code blocks (\`\`\`) or \`&nbsp;\` (HTML non-breaking space) to preserve precise spacing/indentation where needed.
+- Utilize \`**bold**\` for bold text and \`ALL CAPS\` where appropriate.
+- For bullet points and nested lists, use \`-\` markers and correct nests as per original.
 - Present contact information prominently at the top, bolded and spaced as per original layout.
-- Dates should match the original format; if there is any need for standardization, use `MMM YYYY` (e.g., Jan 2021), otherwise retain original.
-- For any missing section, include a Markdown comment: `<!-- [Section Name] not found in resume -->`.
-- Highlight added keywords and enhanced sections for ATS where applicable, using Markdown comments for clarity.
-
+- Dates should match the original format; if there is any need for standardization, use \`MMM YYYY\` (e.g., Jan 2021), otherwise retain original.
+- For any missing section, include a Markdown comment: \`<!-- Section missing -->\`.
 # Verbosity
 - Provide concise, highly readable output.
 - Use high verbosity with clear, explicit Markdown constructs for sections and lists.
-- Ensure extracted and enhanced content is suitable for parsing by modern ATS software.
-
 # Stop Conditions
-- Extraction and enhancement are complete and formatted when all sections and elements are preserved or commented if missing, Markdown accurately reflects input structure, and ATS score is improved to the defined target threshold.
-
+- Extraction is complete and formatted when all sections and elements are preserved or commented if missing, and Markdown accurately reflects input structure.
 ---
-
 Example Output:
-```markdown
+\`\`\`markdown
 **JOHN DOE**  
 johndoe@email.com  
 (555) 555-5555
-
 ## PROFESSIONAL SUMMARY
-Results-driven software engineer with ... <!-- ATS: Added keywords for software development, agile methodologies -->
-
+Results-driven software engineer with ...
 ## SKILLS & CERTIFICATIONS
-- Python <!-- ATS: Added technical keyword -->
+- Python
 - AWS Certified Solutions Architect
-- Agile Development
-- Project Management
-
 ## WORK EXPERIENCE
 ### Software Engineer
 Acme Corp  
 Jan 2020 – Present
-- Developed ... <!-- ATS: Optimized bullet point for technical impact -->
-
+- Developed ...
 ## EDUCATION
 Bachelor of Science in Computer Science, XYZ University  
 2016 – 2020
-```
-
-<!-- Add Markdown comments for any missing sections as described above -->
-    `;
-
+\`\`\`
+`;
     // Create the image part
     const imagePart = {
       inlineData: {
