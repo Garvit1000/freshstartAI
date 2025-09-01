@@ -43,25 +43,98 @@ async function extractTextFromPDF(
 
     // Create the prompt with the PDF content
     const prompt = `
-      Analyze this PDF resume and extract all text content while carefully preserving:
-      1. Section headers and their hierarchy
-      2. Bullet points and nested lists
-      3. Exact formatting, spacing, and indentation
-      4. Contact information
-      5. Work experience details with dates
-      6. Education details with dates
-      7. Skills and certifications
-      8. Professional summary or profile section
+Developer: # Role and Objective
+Extract and structure the full text content from a PDF resume, carefully preserving the document's original layout, section hierarchy, and formatting in a Markdown output. Enhance the extracted resume to improve its Applicant Tracking System (ATS) score by up to 80%, focusing on optimizing section clarity, keyword relevance, and formatting for ATS compatibility.
 
-      Pay special attention to:
-      - The exact indentation of each line
-      - Bullet point styles and nested levels
-      - Section header formatting (all caps, bold, etc.)
-      - Spacing between sections
-      - Contact information layout
-      - Date formatting in experience and education sections
+# Instructions
+- Begin with a concise checklist (3-7 bullets) of what you will do; keep items conceptual, not implementation-level.
+- Extract all textual elements, maintaining:
+  1. Section headers and their hierarchical order
+  2. Bullet points and nested lists
+  3. The exact formatting, including spacing and indentation
+  4. All contact information
+  5. Work experience entries with corresponding dates
+  6. Education entries with corresponding dates
+  7. Skills and certifications
+  8. Professional summary or profile section
+- Enhance keyword optimization and clarity in each section for improved ATS compatibility.
+- Ensure formatting, spacing, and section labeling aligns with best practices for ATS parsing.
 
-      Return the extracted text in a clean, structured format that preserves all original layout elements.
+## Sub-categories
+- Preserve:
+  - Indentation of every line
+  - Styles and depth of bullet points
+  - Formatting of section headers (e.g., ALL CAPS, bold)
+  - Spacing precision between sections
+  - Layout of contact information
+  - Original date formatting in relevant sections
+- Optimize language and structure within each section for maximum ATS parsing effectiveness (e.g., explicit skill lists, clearly labeled sections).
+
+# Context
+- Resume PDF is the source; your output must mimic the input’s structure and formatting as closely as possible using Markdown.
+- Some sections may be missing; these should be explicitly noted.
+- Resume content should be enhanced to improve ATS score, focusing on clarity, keywords, and formatting.
+
+# Reasoning Steps
+- Analyze the input PDF step by step, identifying and preserving hierarchical and stylistic cues throughout extraction.
+- Identify opportunities to insert relevant keywords and enhance section labeling for ATS.
+
+# Planning and Verification
+- Decompose PDF into sections and components (headers, lists, etc.).
+- Pay close attention to layout, indentation, spacing, and any unique formatting.
+- Optimize for ATS by making section headers explicit, standardizing section names, and adding common keywords relevant to the candidate's field.
+- Double-check that extracted text hierarchy, styles, indentation, and spacing match the original before generating Markdown output.
+- Confirm all required sections are present or appropriately commented if missing.
+- After the Markdown output is generated, validate that all required elements and structure are correctly preserved and enhanced for ATS; if discrepancies are found, self-correct and repeat validation.
+
+# Output Format
+- Return results as a Markdown-formatted document.
+- Use Markdown headings (`#`, `##`, `###`, etc.) to mirror the original section hierarchy.
+- Apply Markdown code blocks (```) or `&nbsp;` (HTML non-breaking space) to preserve precise spacing/indentation where needed.
+- Utilize `**bold**` for bold text and `ALL CAPS` where appropriate.
+- For bullet points and nested lists, use `-` markers and correct nests as per original.
+- Present contact information prominently at the top, bolded and spaced as per original layout.
+- Dates should match the original format; if there is any need for standardization, use `MMM YYYY` (e.g., Jan 2021), otherwise retain original.
+- For any missing section, include a Markdown comment: `<!-- [Section Name] not found in resume -->`.
+- Highlight added keywords and enhanced sections for ATS where applicable, using Markdown comments for clarity.
+
+# Verbosity
+- Provide concise, highly readable output.
+- Use high verbosity with clear, explicit Markdown constructs for sections and lists.
+- Ensure extracted and enhanced content is suitable for parsing by modern ATS software.
+
+# Stop Conditions
+- Extraction and enhancement are complete and formatted when all sections and elements are preserved or commented if missing, Markdown accurately reflects input structure, and ATS score is improved to the defined target threshold.
+
+---
+
+Example Output:
+```markdown
+**JOHN DOE**  
+johndoe@email.com  
+(555) 555-5555
+
+## PROFESSIONAL SUMMARY
+Results-driven software engineer with ... <!-- ATS: Added keywords for software development, agile methodologies -->
+
+## SKILLS & CERTIFICATIONS
+- Python <!-- ATS: Added technical keyword -->
+- AWS Certified Solutions Architect
+- Agile Development
+- Project Management
+
+## WORK EXPERIENCE
+### Software Engineer
+Acme Corp  
+Jan 2020 – Present
+- Developed ... <!-- ATS: Optimized bullet point for technical impact -->
+
+## EDUCATION
+Bachelor of Science in Computer Science, XYZ University  
+2016 – 2020
+```
+
+<!-- Add Markdown comments for any missing sections as described above -->
     `;
 
     // Create the image part
