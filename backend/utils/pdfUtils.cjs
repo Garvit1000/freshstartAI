@@ -341,20 +341,58 @@ function extractTables(jsonData) {
   }
 }
 
-// PDF modification function
-async function modifyPDFWithFallback(buffer, optimizedText, formattingInfo, template = 'professional') {
+// PDF modification function with robust error handling
+async function modifyPDFWithFallback(buffer, optimizedText, formattingInfo, template = 'classic') {
   try {
-    // Skip the Adobe SDK attempt and directly use the local PDF editor
     console.log(`Using local PDF editor with ${template} template for document modification`);
     
+    // Validate inputs
+    if (!optimizedText || optimizedText.trim().length === 0) {
+      throw new Error("Optimized text is empty or invalid");
+    }
+    
+    if (!buffer || buffer.length < 100) {
+      throw new Error("Invalid PDF buffer");
+    }
+    
+    // Only allow classic and minimalist templates
+    const validTemplates = ['classic', 'minimalist'];
+    const finalTemplate = validTemplates.includes(template) ? template : 'classic';
+    
+    if (finalTemplate !== template) {
+      console.log(`Invalid template '${template}', using 'classic' instead`);
+    }
+    
     // Call the editPDF function with the specified template
-    const result = await editPDF(buffer, optimizedText, formattingInfo, template);
-    console.log("PDF editing completed successfully");
+    const result = await editPDF(buffer, optimizedText, formattingInfo, finalTemplate);
+    
+    // Validate result
+    if (!result || result.length < 1000) {
+      throw new Error(`Generated PDF is too small (${result?.length || 0} bytes)`);
+    }
+    
+    console.log("PDF editing completed successfully, size:", result.length);
     return result;
   } catch (error) {
-    console.error('Error modifying PDF:', error);
-    // Final fallback: return original PDF
-    console.log("PDF editing failed, returning original PDF");
+    console.error('Error modifying PDF with template:', template, error.message);
+    
+    // Try the other template as fallback
+    const fallbackTemplate = template === 'classic' ? 'minimalist' : 'classic';
+    console.log(`Attempting fallback to ${fallbackTemplate} template`);
+    
+    try {
+      const fallbackResult = await editPDF(buffer, optimizedText, formattingInfo, fallbackTemplate);
+      
+      if (fallbackResult && fallbackResult.length > 1000) {
+        console.log(`${fallbackTemplate} template fallback successful`);
+        return fallbackResult;
+      }
+    } catch (fallbackError) {
+      console.error(`${fallbackTemplate} template fallback failed:`, fallbackError.message);
+    }
+    
+    // Final fallback: return original PDF with a warning
+    console.warn("All PDF generation attempts failed, returning original PDF");
     return buffer;
   }
 }
@@ -362,11 +400,8 @@ async function modifyPDFWithFallback(buffer, optimizedText, formattingInfo, temp
 // Function to get template descriptions
 function getTemplateDescription(template) {
   const descriptions = {
-    classic: "Traditional resume format with clean, professional styling",
-    professional: "Polished design with subtle blue accents for a corporate look",
-    modern: "Contemporary layout with teal highlights for a fresh appearance",
-    tech: "Tech-focused design with vibrant blue bullets for technical roles",
-    minimalist: "Clean, minimal design with ample white space for elegant simplicity"
+    classic: "Traditional resume format with clean, professional styling and standard margins",
+    minimalist: "Clean, minimal design with ample white space for elegant simplicity and wider margins"
   };
   return descriptions[template] || "Professional resume template";
 }

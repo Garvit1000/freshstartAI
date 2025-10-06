@@ -41,12 +41,14 @@ router.post("/optimize-resume", upload.single("resume"), async (req, res) => {
         .json({ error: "Missing resume file or job description" });
     }
 
-    // Get template choice (default to professional if not specified)
-    const template = req.body.template || "professional";
-    if (!templates.includes(template)) {
+    // Get template choice (default to classic)
+    const template = req.body.template || "classic";
+    const validTemplates = ['classic', 'minimalist'];
+    
+    if (!validTemplates.includes(template)) {
       return res.status(400).json({
         error: "Invalid template choice",
-        availableTemplates: templates,
+        availableTemplates: validTemplates,
       });
     }
 
@@ -226,8 +228,9 @@ ${(originalATSScore.contentSuggestions || []).map((suggestion) => `- ${suggestio
 
 // Get available templates
 router.get("/resume-templates", (req, res) => {
+  const validTemplates = ['classic', 'minimalist'];
   res.json({
-    templates: templates.map((template) => ({
+    templates: validTemplates.map((template) => ({
       id: template,
       name: template.charAt(0).toUpperCase() + template.slice(1),
       description: getTemplateDescription(template),
@@ -244,8 +247,8 @@ router.post("/update-resume", upload.single("resume"), async (req, res) => {
         .json({ error: "Missing resume file or job description" });
     }
 
-    // Get template choice and custom text
-    const template = req.body.template || "professional";
+    // Get template choice and custom text (default to classic)
+    const template = req.body.template || "classic";
     let customText = req.body.customText;
 
     if (!customText) {
@@ -257,10 +260,12 @@ router.post("/update-resume", upload.single("resume"), async (req, res) => {
     // Ensure text format is preserved correctly
     customText = customText.replace(/\\n/g, "\n");
 
-    if (!templates.includes(template)) {
+    const validTemplates = ['classic', 'minimalist'];
+    
+    if (!validTemplates.includes(template)) {
       return res.status(400).json({
         error: "Invalid template choice",
-        availableTemplates: templates,
+        availableTemplates: validTemplates,
       });
     }
 
@@ -489,7 +494,7 @@ router.post(
         return res.status(400).json({ error: "Missing custom text" });
       }
 
-      const template = req.body.template || "professional";
+      const template = req.body.template || "classic";
       const jobDescription = req.body.jobDescription || "";
 
       console.log(

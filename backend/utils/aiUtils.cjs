@@ -51,16 +51,22 @@ async function extractTextFromPDF(
   try {
     // Attempt to get Adobe structural analysis
     let adobeAnalysis = null;
-    try {
-      adobeAnalysis = await analyzeDocumentStructureWithAdobe(pdfBuffer);
-      if (adobeAnalysis) {
-        console.log("Successfully analyzed document structure with Adobe");
+    
+    // Only try Adobe if the function is provided and valid
+    if (analyzeDocumentStructureWithAdobe && typeof analyzeDocumentStructureWithAdobe === 'function') {
+      try {
+        adobeAnalysis = await analyzeDocumentStructureWithAdobe(pdfBuffer);
+        if (adobeAnalysis) {
+          console.log("Successfully analyzed document structure with Adobe");
+        }
+      } catch (adobeError) {
+        console.error(
+          "Adobe analysis failed, continuing with Gemini only:",
+          adobeError.message,
+        );
       }
-    } catch (adobeError) {
-      console.error(
-        "Adobe analysis failed, continuing with Gemini only:",
-        adobeError,
-      );
+    } else {
+      console.log("Adobe analysis not available, using Gemini only");
     }
 
     // Convert PDF buffer to base64
@@ -106,12 +112,13 @@ Extract and structure the full text content from a PDF resume, carefully preserv
 # Output Format
 - Return results as a Markdown-formatted document.
 - Use Markdown headings (\`#\`, \`##\`, \`###\`, etc.) to mirror the original section hierarchy.
-- Apply Markdown code blocks (\`\`\`) or \`&nbsp;\` (HTML non-breaking space) to preserve precise spacing/indentation where needed.
+- Use regular spaces and proper Markdown formatting for indentation - DO NOT use HTML entities like &nbsp; or any other HTML tags.
 - Utilize \`**bold**\` for bold text and \`ALL CAPS\` where appropriate.
-- For bullet points and nested lists, use \`-\` markers and correct nests as per original.
+- For bullet points and nested lists, use \`-\` markers with appropriate spacing for nesting.
 - Present contact information prominently at the top, bolded and spaced as per original layout.
 - Dates should match the original format; if there is any need for standardization, use \`MMM YYYY\` (e.g., Jan 2021), otherwise retain original.
 - For any missing section, include a Markdown comment: \`<!-- Section missing -->\`.
+- IMPORTANT: Output must be plain text with Markdown formatting only - absolutely no HTML entities or tags.
 # Verbosity
 - Provide concise, highly readable output.
 - Use high verbosity with clear, explicit Markdown constructs for sections and lists.
@@ -275,10 +282,12 @@ async function optimizeResume(
   transparencyMode = false,
 ) {
   try {
-    // Clean up text markers from input while preserving whitespace after newlines
+    // Clean up text markers and HTML entities from input
     resumeText = resumeText
       .replace(/```text\n?/g, "")
       .replace(/```\n?/g, "")
+      .replace(/&nbsp;/g, " ") // Replace &nbsp; with regular spaces
+      .replace(/&[a-z]+;/gi, " ") // Replace other HTML entities with spaces
       .replace(/^\s+|\s+$/g, ""); // Trim start/end but preserve internal whitespace
 
     // Analyze the resume structure to provide format preservation guidance
@@ -327,9 +336,43 @@ async function optimizeResume(
           : ""
       }
 
-      [Rest of the prompt continues as before...]
+      CRITICAL FORMATTING REQUIREMENTS:
+      1. Each section header (## Education, ## Experience, etc.) MUST be on its OWN LINE
+      2. Add a blank line BEFORE each ## section header
+      3. Use the ## prefix for all major section headers
+      4. Use Markdown formatting only - NO HTML entities
+      5. Preserve bullet points with proper - or • symbols
+      6. Keep contact info on separate lines at the top
+      7. Ensure consistent spacing between sections
 
-      Return ONLY the optimized resume text with preserved formatting. The resume MUST fit on one page.
+      OPTIMIZATION GUIDELINES:
+      - Strategically incorporate keywords from the job description naturally
+      - Quantify achievements with numbers and metrics where possible
+      - Use strong action verbs (Developed, Implemented, Led, Created, etc.)
+      - Remove generic statements and focus on specific accomplishments
+      - Ensure each bullet point adds value and demonstrates skills
+      - Maintain professional tone and clear, concise language
+      - Format dates consistently (YYYY or MMM YYYY)
+      - Keep section headers in ALL CAPS if original resume used that style
+
+      OUTPUT FORMAT EXAMPLE:
+      *NAME*
+      contact details on separate lines
+
+      ## EDUCATION
+      School Name
+      Degree information
+      - Achievement bullet points
+
+      ## EXPERIENCE
+      Company Name
+      Job Title | Date Range
+      - Achievement bullet points
+
+      ## SKILLS
+      - Skill categories and items
+
+      Return ONLY the optimized resume text with the formatting above. The resume MUST fit on one page. Each ## header MUST be on its own line with a blank line before it.
     `;
 
     console.log("Sending optimization prompt to Gemini");
@@ -356,11 +399,23 @@ async function optimizeResume(
     const response = await result.response;
     let optimizedText = safeParseGeminiResponse(response).trim();
 
-    // Clean up any remaining text markers
+    // Clean up any remaining text markers and HTML entities
     let finalOptimizedText = optimizedText
       .replace(/```text\n?/g, "")
+      .replace(/```markdown\n?/g, "")
       .replace(/```\n?/g, "")
+      .replace(/&nbsp;/g, " ") // Replace &nbsp; with regular spaces
+      .replace(/&[a-z]+;/gi, " ") // Replace other HTML entities with spaces
       .trim();
+    
+    // CRITICAL FIX: Ensure ## headers are on their own lines
+    // This fixes cases where AI puts headers at end of lines like "text ## Education"
+    finalOptimizedText = finalOptimizedText
+      .replace(/([^\n])\s+(##\s+[A-Z])/g, '$1\n\n$2') // Add line breaks before ## headers
+      .replace(/(##\s+[A-Z][^\n]+)\s+(##\s+[A-Z])/g, '$1\n\n$2') // Separate consecutive headers
+      .replace(/\n{3,}/g, '\n\n'); // Clean up excessive line breaks
+    
+    console.log("After header fix - first 400 chars:", finalOptimizedText.substring(0, 400));
 
     // Make sure section headers are in the right format (all caps if original was)
     finalOptimizedText = finalOptimizedText
@@ -392,6 +447,9 @@ async function optimizeResume(
 
     // Remove any asterisks that might be around keywords
     finalOptimizedText = finalOptimizedText.replace(/\*([^*]+)\*/g, "$1");
+
+    // Final validation: ensure no HTML entities remain
+    finalOptimizedText = cleanHTMLEntities(finalOptimizedText);
 
     // Apply a hard limit to enforce one page
     finalOptimizedText = enforceOnePageLimit(finalOptimizedText);
@@ -746,6 +804,28 @@ function getDefaultATSScore() {
   };
 }
 
+// Helper function to clean all HTML entities from text
+function cleanHTMLEntities(text) {
+  if (!text) return text;
+  
+  // Replace common HTML entities
+  let cleaned = text
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&[a-z]+;/gi, " ") // Replace any remaining HTML entities with spaces
+    .replace(/&#\d+;/g, " "); // Replace numeric entities with spaces
+    
+  // Clean up multiple SPACES but preserve newlines
+  // [^\S\n] matches any whitespace EXCEPT newlines
+  cleaned = cleaned.replace(/[^\S\n]{2,}/g, " "); // Replace 2+ spaces/tabs (but not newlines) with single space
+  
+  return cleaned;
+}
+
 module.exports = {
   initializeGeminiAI,
   extractTextFromPDF,
@@ -753,4 +833,5 @@ module.exports = {
   analyzeSkillGaps,
   calculateATSScore,
   enforceOnePageLimit,
+  cleanHTMLEntities,
 };

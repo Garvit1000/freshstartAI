@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { API_ENDPOINTS } from "@/config/api";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -53,7 +54,7 @@ const DashboardMain = () => {
   const [pdfReady, setPdfReady] = useState(false);
   const [transparencyInsights, setTransparencyInsights] = useState([]);
   const [templates, setTemplates] = useState([]);
-  const [selectedTemplate, setSelectedTemplate] = useState("professional");
+  const [selectedTemplate, setSelectedTemplate] = useState("classic");
   const { user, updateCredits } = useAuth();
   const navigate = useNavigate();
   const [atsScores, setAtsScores] = useState(null);
@@ -161,9 +162,7 @@ const DashboardMain = () => {
 
     const fetchTemplates = async () => {
       try {
-        const response = await fetch(
-          "https://freshstartai.onrender.com/api/resume-templates",
-        );
+        const response = await fetch(API_ENDPOINTS.RESUME_TEMPLATES);
         if (response.ok) {
           const data = await response.json();
           setTemplates(data.templates);
@@ -231,12 +230,9 @@ const DashboardMain = () => {
   const getTemplatePreviewColor = (template) => {
     const colors = {
       classic: "bg-gray-700",
-      professional: "bg-blue-800",
-      modern: "bg-teal-600",
-      tech: "bg-cyan-600",
       minimalist: "bg-gray-300",
     };
-    return colors[template] || "bg-blue-800";
+    return colors[template] || "bg-gray-700";
   };
 
   // Handler for starting edit mode
@@ -298,13 +294,10 @@ const DashboardMain = () => {
 
         // Use the direct PDF generation endpoint
 
-        const response = await fetch(
-          "https://freshstartai.onrender.com/api/generate-direct-pdf",
-          {
-            method: "POST",
-            body: formData,
-          },
-        );
+        const response = await fetch(API_ENDPOINTS.GENERATE_DIRECT_PDF, {
+          method: "POST",
+          body: formData,
+        });
 
         if (!response.ok) {
           throw new Error(`Failed to update resume: ${response.statusText}`);
@@ -470,6 +463,7 @@ const DashboardMain = () => {
 
   // Optimize resume button click handler
   const handleOptimizeResume = async () => {
+    console.log('Starting resume optimization...');
     try {
       // Don't deduct credits until optimization is successful
       setIsOptimizing(true);
@@ -490,20 +484,34 @@ const DashboardMain = () => {
       formData.append("template", selectedTemplate);
       formData.append("transparencyMode", transparencyMode);
   
-      const response = await fetch(
-        "https://freshstartai.onrender.com/api/optimize-resume",
-        {
-          method: "POST",
-          body: formData,
-        },
-      );
+      console.log('Sending request to API with template:', selectedTemplate);
+      
+      const response = await fetch(API_ENDPOINTS.OPTIMIZE_RESUME, {
+        method: "POST",
+        body: formData,
+      });
   
+      console.log('Response status:', response.status);
+      
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to optimize resume");
+        let errorMessage = "Failed to optimize resume";
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorMessage;
+          console.error('API error:', errorData);
+        } catch (e) {
+          console.error('Could not parse error response');
+        }
+        throw new Error(errorMessage);
       }
   
       const data = await response.json();
+      console.log('Received data from API:', {
+        hasOriginalText: !!data.originalText,
+        hasOptimizedText: !!data.optimizedText,
+        hasAtsScores: !!data.atsScores,
+        pdfReady: data.pdfReady
+      });
       setOriginalText(data.originalText);
       setOptimizedText(data.optimizedText.optimizedText || data.optimizedText);
       setEditableOptimizedText(
@@ -532,11 +540,13 @@ const DashboardMain = () => {
       }
       
     } catch (err) {
-      setError(err.message);
       console.error("Error optimizing resume:", err);
+      console.error("Error stack:", err.stack);
+      setError(`Failed to optimize resume: ${err.message}. Please try again or contact support if the issue persists.`);
       // No need to restore credit since we only deduct after success
     } finally {
       setIsOptimizing(false);
+      console.log('Optimization process completed');
     }
   };
 
@@ -544,7 +554,7 @@ const DashboardMain = () => {
   const downloadPDF = async () => {
     try {
       // Simple approach - just redirect to the download endpoint
-      window.location.href = "https://freshstartai.onrender.com/api/download-pdf";
+      window.location.href = API_ENDPOINTS.DOWNLOAD_PDF;
     } catch (error) {
       console.error("Error downloading PDF:", error);
       setError("Failed to download PDF: " + error.message);
@@ -930,7 +940,7 @@ const DashboardMain = () => {
                     <span className="text-xs text-[#2AB7CA]">
                       Using{" "}
                       {templates.find((t) => t.id === selectedTemplate)?.name ||
-                        "Professional"}{" "}
+                        "Standard"}{" "}
                       template
                     </span>
                   </Label>
